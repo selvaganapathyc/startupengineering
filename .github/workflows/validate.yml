@@ -1,0 +1,35 @@
+name: Validate skills
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'plugins/**'
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'plugins/**'
+  workflow_dispatch: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check all skills have SKILL.md
+        run: |
+          for dir in skills/*/; do
+            if [ ! -f "$dir/SKILL.md" ]; then
+              echo "ERROR: Missing SKILL.md in $dir"
+              exit 1
+            fi
+          done
+
+      - name: Check for forbidden file patterns
+        run: |
+          # Skills should not contain framework-specific files — those belong in the site repo
+          if find skills/ -name "*.tsx" -o -name "*.jsx" 2>/dev/null | grep -q .; then
+            echo "ERROR: Skills should not contain React component files"
+            exit 1
+          fi
